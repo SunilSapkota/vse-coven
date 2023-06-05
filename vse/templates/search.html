@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        body {
+            padding: 20px;
+            position: relative;
+        }
+        .suggestion {
+            cursor: pointer;
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin-bottom: 5px;
+        }
+        .suggestion:hover {
+            background-color: #eee;
+        }
+        .suggestion .title {
+            font-weight: bold;
+        }
+        #load {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        #loading {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+    <script>
+        $(document).ready(function(){
+            function updateTotal() {
+                $.get("/total", function(total){
+                    $("#total").text(total);
+                });
+            }
+
+            $("#search").on("input", function(){
+
+                $.post("/suggest", { query: $(this).val() })
+    .done(function(data){
+        let suggestions = $("#suggestions");
+        suggestions.empty();
+
+      if (Array.isArray(data) && data.length > 0) {
+                    data.forEach(function(item){
+                        let suggestion = $("<div>")
+                            .addClass("suggestion")
+                            .append($("<div>").addClass("title").text(item))
+                            .on("click", function(){
+                                window.location.href = "/detail?title=" + encodeURIComponent(item);
+                            });
+                        suggestions.append(suggestion);
+                    });
+                }
+    });
+            });
+
+            $("#load").on("click", function(){
+                $("#loading").show();
+                $.get("/scrape", function(){
+                    $("#loading").hide();
+                    updateTotal();
+                });
+            });
+
+            updateTotal();
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 offset-md-3">
+                <h1 class="text-center">Coventry VSE</h1>
+                <form action="/" method="post">
+                    <div class="form-group">
+                        <input id="search" type="text" name="search" class="form-control" placeholder="Search...">
+                    </div>
+                    <div id="suggestions"></div>
+                    <button type="submit" class="btn btn-primary btn-block">Search</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <button id="load" class="btn btn-secondary">Load Data</button>
+    <div id="loading" style="display: none;">Loading...</div>
+    <div  id="total"style="display: none;"></div>
+</body>
+</html>
